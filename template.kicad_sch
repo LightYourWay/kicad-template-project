@@ -2,8 +2,13 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid eba9849c-6597-46c8-a06a-a229d0b6777f)
+	(uuid "eba9849c-6597-46c8-a06a-a229d0b6777f")
 	(paper "A4")
+	(title_block
+		(title "template")
+		(rev "v0.0.1")
+		(company "Lukas Runge Veranstaltungstechnik")
+	)
 	(lib_symbols)
 	(sheet_instances
 		(path "/"
