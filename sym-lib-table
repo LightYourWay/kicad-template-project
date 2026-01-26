@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "Part-DB")(type "HTTP")(uri "${LRV_CUSTOM_LIBS}/symbol/Part-DB.kicad_httplib")(options "")(descr ""))
+  (lib (name "LRV")(type "KiCad")(uri "${LRV_CUSTOM_LIBS}/symbol/LRV.kicad_sym")(options "")(descr ""))
+)
