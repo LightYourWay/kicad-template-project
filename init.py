@@ -7,8 +7,8 @@ Run once right after "Use this template" + clone. The script
   2. fills the title block with "#<pbs> <title>" and today's date,
   3. runs setup-libs.py so kicad-custom-libs is available on this machine,
   4. stages the result, offers to fold it into the single commit GitHub
-     created from the template ("feat: :tada: initialise project <name>"),
-     and deletes itself.
+     created from the template ("feat: :tada: initialise project from
+     template"), and deletes itself.
 
 If the initial commit was amended, review with `git show --stat` and push
 with `git push --force-with-lease`; otherwise nothing is committed.
@@ -252,7 +252,7 @@ def main() -> None:
 
     # Fold everything into the single commit GitHub created from the template,
     # so the project starts with one clean conventional commit.
-    message = f"feat: :tada: initialise project {name}"
+    message = "feat: :tada: initialise project from template"
     amended = False
     if use_git and not args.no_amend:
         if commit_count() != 1:
