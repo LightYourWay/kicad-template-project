@@ -6,9 +6,12 @@ Run once right after "Use this template" + clone. The script
   1. renames template.kicad_* to <name>.kicad_* and patches every reference,
   2. fills the title block with "#<pbs> <title>" and today's date,
   3. runs setup-libs.py so kicad-custom-libs is available on this machine,
-  4. stages the result in git and deletes itself.
+  4. stages the result, offers to fold it into the single commit GitHub
+     created from the template ("feat: :tada: initialise project <name>"),
+     and deletes itself.
 
-Nothing is committed -- review with `git status` and `git diff --cached`.
+If the initial commit was amended, review with `git show --stat` and push
+with `git push --force-with-lease`; otherwise nothing is committed.
 Requires Python 3.8+ and git. Works on macOS, Linux and Windows.
 """
 
@@ -76,6 +79,16 @@ def git(*args: str) -> Optional[subprocess.CompletedProcess]:
 def in_git_repo() -> bool:
     result = git("rev-parse", "--is-inside-work-tree")
     return bool(result and result.returncode == 0)
+
+
+def commit_count() -> int:
+    result = git("rev-list", "--count", "HEAD")
+    if result and result.returncode == 0:
+        try:
+            return int(result.stdout.strip())
+        except ValueError:
+            pass
+    return 0
 
 
 def git_tracked(path: Path) -> bool:
@@ -174,6 +187,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--title", help="board title (default: the project name)")
     parser.add_argument("--date", help="title block date, YYYY-MM-DD (default: today)")
     parser.add_argument("--skip-libs", action="store_true", help="do not run setup-libs.py")
+    amend = parser.add_mutually_exclusive_group()
+    amend.add_argument("--amend", action="store_true",
+                       help="fold the changes into GitHub's 'Initial commit' without asking")
+    amend.add_argument("--no-amend", action="store_true",
+                       help="never touch the initial commit, only stage the changes")
     parser.add_argument("--keep", action="store_true", help="keep this script instead of deleting it")
     parser.add_argument("-y", "--yes", action="store_true", help="assume yes for confirmations")
     args, libs_args = parser.parse_known_args()
@@ -231,14 +249,36 @@ def main() -> None:
         git("add", "-A", "--", *[p.name for p in renamed], *([readme.name] if readme else []))
         if not args.keep and git_tracked(me):
             git("rm", "-q", "--cached", "--", me.name)
+
+    # Fold everything into the single commit GitHub created from the template,
+    # so the project starts with one clean conventional commit.
+    message = f"feat: :tada: initialise project {name}"
+    amended = False
+    if use_git and not args.no_amend:
+        if commit_count() != 1:
+            if args.amend:
+                print("\n⚠️  more than one commit on this branch – not touching history")
+        elif args.amend or confirm(
+            f"\n✏️  amend the initial commit to '{message}'?", True, args.yes
+        ):
+            result = git("commit", "--amend", "-m", message)
+            if result and result.returncode == 0:
+                amended = True
+            else:
+                print(f"⚠️  git commit --amend failed: {(result.stderr if result else '').strip()}")
+
     if args.keep:
         print(f"\n🧷 keeping {me.name} (--keep)")
     else:
         me.unlink()
         print(f"\n🗑️  removed {me.name}")
 
-    print("\n✅ done. Review with:  git status && git diff --cached")
-    print(f"   then commit, e.g.:  git commit -m 'feat: :truck: initialise project {name}'")
+    if amended:
+        print("\n✅ done. Review with:  git show --stat")
+        print("   then push with:     git push --force-with-lease")
+    else:
+        print("\n✅ done. Review with:  git status && git diff --cached")
+        print(f"   then commit, e.g.:  git commit -m '{message}'")
 
 
 if __name__ == "__main__":
