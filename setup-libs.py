@@ -97,8 +97,9 @@ def kicad_settings_files() -> List[Path]:
     bases: List[Path] = []
     override = os.environ.get("KICAD_CONFIG_HOME")
     if override:
+        # KiCad uses this directory *instead of* the platform default.
         bases.append(Path(override))
-    if sys.platform == "darwin":
+    elif sys.platform == "darwin":
         bases.append(home / "Library" / "Preferences" / "kicad")
     elif os.name == "nt":
         appdata = os.environ.get("APPDATA")
@@ -137,13 +138,19 @@ def read_libs_var(settings: Path) -> Optional[str]:
         data = json.loads(settings.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    return (data.get("environment") or {}).get("vars", {}).get(LIBS_VAR)
+    # KiCad writes "vars": null when no user variables are defined.
+    variables = (data.get("environment") or {}).get("vars") or {}
+    return variables.get(LIBS_VAR)
 
 
 def write_libs_var(settings: Path, value: str) -> None:
     data = json.loads(settings.read_text(encoding="utf-8"))
-    env = data.setdefault("environment", {})
-    variables = env.setdefault("vars", {})
+    env = data.get("environment")
+    if not isinstance(env, dict):
+        env = data["environment"] = {}
+    variables = env.get("vars")
+    if not isinstance(variables, dict):
+        variables = env["vars"] = {}
     variables[LIBS_VAR] = value
     # KiCad itself writes sorted keys with a two-space indent.
     settings.write_text(
