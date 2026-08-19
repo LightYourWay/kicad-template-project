@@ -1,0 +1,3 @@
+# Keep the helper scripts out of GitHub's language statistics -- this is a
+# KiCad project, not a Python one.
+*.py linguist-vendored
