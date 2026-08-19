@@ -157,7 +157,8 @@ def patch_project_file(path: Path, name: str, title: str, date: str) -> None:
 
 
 README_HEADING_RE = re.compile(r"^# kicad-template-project[ \t]*$", re.MULTILINE)
-README_INIT_SECTION_RE = re.compile(r"\n## Initiali[sz]e\b.*?(?=\n## |\Z)", re.DOTALL)
+# The "Automatic setup" section only makes sense before this script has run.
+README_INIT_SECTION_RE = re.compile(r"\n## Automatic setup\b.*?(?=\n## |\Z)", re.DOTALL)
 
 
 def patch_readme(name: str) -> Optional[Path]:
