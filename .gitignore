@@ -32,4 +32,7 @@ fp-info-cache
 
 ibom.html
 production
-pdf
+*.pdf
+*.zip
+
+/.history
